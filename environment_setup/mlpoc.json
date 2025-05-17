@@ -1,0 +1,344 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+		"baseName": {
+			"type": "string",
+			"maxLength": 10,
+			"minLength": 3,
+			"metadata": {
+							"description": "The base name to use as prefix to create all the resources."
+						}
+		}
+        
+		"storageAccount": {
+            "defaultValue": "[concat(toLower(parameters('baseName')), 'amlsa')]",
+            "type": "String"
+        },
+        "CognitiveServices": {
+            "defaultValue": "[concat(toLower(parameters('baseName')), 'openai')]",
+            "type": "String"
+        }
+
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.CognitiveServices/accounts",
+            "apiVersion": "2025-04-01-preview",
+            "name": "[parameters('CognitiveServices')]",
+            "location": "eastus",
+            "tags": {
+                "Application": "",
+                "CostCenter": "",
+                "Environment": ""
+            },
+            "sku": {
+                "name": "S0"
+            },
+            "kind": "OpenAI",
+            "properties": {
+                "apiProperties": {},
+                "customSubDomainName": "[parameters('CognitiveServices')]",
+                "networkAcls": {
+                    "defaultAction": "Allow",
+                    "virtualNetworkRules": [],
+                    "ipRules": []
+                },
+                "allowProjectManagement": false,
+                "publicNetworkAccess": "Enabled"
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "2024-01-01",
+            "name": "[parameters('storageAccount')]",
+            "location": "eastus2",
+            "tags": {
+                "Application": "",
+                "CostCenter": "",
+                "Environment": ""
+            },
+            "sku": {
+                "name": "Standard_LRS",
+                "tier": "Standard"
+            },
+            "kind": "StorageV2",
+            "properties": {
+                "dnsEndpointType": "Standard",
+                "defaultToOAuthAuthentication": false,
+                "publicNetworkAccess": "Enabled",
+                "allowCrossTenantReplication": false,
+                "minimumTlsVersion": "TLS1_2",
+                "allowBlobPublicAccess": false,
+                "allowSharedKeyAccess": true,
+                "largeFileSharesState": "Enabled",
+                "networkAcls": {
+                    "bypass": "AzureServices",
+                    "virtualNetworkRules": [],
+                    "ipRules": [],
+                    "defaultAction": "Allow"
+                },
+                "supportsHttpsTrafficOnly": false,
+                "encryption": {
+                    "requireInfrastructureEncryption": false,
+                    "services": {
+                        "file": {
+                            "keyType": "Account",
+                            "enabled": true
+                        },
+                        "blob": {
+                            "keyType": "Account",
+                            "enabled": true
+                        }
+                    },
+                    "keySource": "Microsoft.Storage"
+                },
+                "accessTier": "Hot"
+            }
+        },
+        {
+            "type": "Microsoft.CognitiveServices/accounts/defenderForAISettings",
+            "apiVersion": "2025-04-01-preview",
+            "name": "[concat(parameters('CognitiveServices'), '/Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.CognitiveServices/accounts', parameters('CognitiveServices'))]"
+            ],
+            "properties": {
+                "state": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.CognitiveServices/accounts/raiPolicies",
+            "apiVersion": "2025-04-01-preview",
+            "name": "[concat(parameters('CognitiveServices'), '/Microsoft.Default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.CognitiveServices/accounts', parameters('CognitiveServices'))]"
+            ],
+            "properties": {
+                "mode": "Blocking",
+                "contentFilters": [
+                    {
+                        "name": "Hate",
+                        "severityThreshold": "Medium",
+                        "blocking": true,
+                        "enabled": true,
+                        "source": "Prompt"
+                    },
+                    {
+                        "name": "Hate",
+                        "severityThreshold": "Medium",
+                        "blocking": true,
+                        "enabled": true,
+                        "source": "Completion"
+                    },
+                    {
+                        "name": "Sexual",
+                        "severityThreshold": "Medium",
+                        "blocking": true,
+                        "enabled": true,
+                        "source": "Prompt"
+                    },
+                    {
+                        "name": "Sexual",
+                        "severityThreshold": "Medium",
+                        "blocking": true,
+                        "enabled": true,
+                        "source": "Completion"
+                    },
+                    {
+                        "name": "Violence",
+                        "severityThreshold": "Medium",
+                        "blocking": true,
+                        "enabled": true,
+                        "source": "Prompt"
+                    },
+                    {
+                        "name": "Violence",
+                        "severityThreshold": "Medium",
+                        "blocking": true,
+                        "enabled": true,
+                        "source": "Completion"
+                    },
+                    {
+                        "name": "Selfharm",
+                        "severityThreshold": "Medium",
+                        "blocking": true,
+                        "enabled": true,
+                        "source": "Prompt"
+                    },
+                    {
+                        "name": "Selfharm",
+                        "severityThreshold": "Medium",
+                        "blocking": true,
+                        "enabled": true,
+                        "source": "Completion"
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.CognitiveServices/accounts/raiPolicies",
+            "apiVersion": "2025-04-01-preview",
+            "name": "[concat(parameters('CognitiveServices'), '/Microsoft.DefaultV2')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.CognitiveServices/accounts', parameters('CognitiveServices'))]"
+            ],
+            "properties": {
+                "mode": "Blocking",
+                "contentFilters": [
+                    {
+                        "name": "Hate",
+                        "severityThreshold": "Medium",
+                        "blocking": true,
+                        "enabled": true,
+                        "source": "Prompt"
+                    },
+                    {
+                        "name": "Hate",
+                        "severityThreshold": "Medium",
+                        "blocking": true,
+                        "enabled": true,
+                        "source": "Completion"
+                    },
+                    {
+                        "name": "Sexual",
+                        "severityThreshold": "Medium",
+                        "blocking": true,
+                        "enabled": true,
+                        "source": "Prompt"
+                    },
+                    {
+                        "name": "Sexual",
+                        "severityThreshold": "Medium",
+                        "blocking": true,
+                        "enabled": true,
+                        "source": "Completion"
+                    },
+                    {
+                        "name": "Violence",
+                        "severityThreshold": "Medium",
+                        "blocking": true,
+                        "enabled": true,
+                        "source": "Prompt"
+                    },
+                    {
+                        "name": "Violence",
+                        "severityThreshold": "Medium",
+                        "blocking": true,
+                        "enabled": true,
+                        "source": "Completion"
+                    },
+                    {
+                        "name": "Selfharm",
+                        "severityThreshold": "Medium",
+                        "blocking": true,
+                        "enabled": true,
+                        "source": "Prompt"
+                    },
+                    {
+                        "name": "Selfharm",
+                        "severityThreshold": "Medium",
+                        "blocking": true,
+                        "enabled": true,
+                        "source": "Completion"
+                    },
+                    {
+                        "name": "Jailbreak",
+                        "blocking": true,
+                        "enabled": true,
+                        "source": "Prompt"
+                    },
+                    {
+                        "name": "Protected Material Text",
+                        "blocking": true,
+                        "enabled": true,
+                        "source": "Completion"
+                    },
+                    {
+                        "name": "Protected Material Code",
+                        "blocking": false,
+                        "enabled": true,
+                        "source": "Completion"
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/blobServices",
+            "apiVersion": "2024-01-01",
+            "name": "[concat(parameters('storageAccount'), '/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccount'))]"
+            ],
+            "sku": {
+                "name": "Standard_LRS",
+                "tier": "Standard"
+            },
+            "properties": {
+                "containerDeleteRetentionPolicy": {
+                    "enabled": true,
+                    "days": 7
+                },
+                "cors": {
+                    "corsRules": []
+                },
+                "deleteRetentionPolicy": {
+                    "allowPermanentDelete": false,
+                    "enabled": true,
+                    "days": 7
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/fileServices",
+            "apiVersion": "2024-01-01",
+            "name": "[concat(parameters('storageAccount'), '/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccount'))]"
+            ],
+            "sku": {
+                "name": "Standard_LRS",
+                "tier": "Standard"
+            },
+            "properties": {
+                "protocolSettings": {
+                    "smb": {}
+                },
+                "cors": {
+                    "corsRules": []
+                },
+                "shareDeleteRetentionPolicy": {
+                    "enabled": true,
+                    "days": 7
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/queueServices",
+            "apiVersion": "2024-01-01",
+            "name": "[concat(parameters('storageAccount'), '/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccount'))]"
+            ],
+            "properties": {
+                "cors": {
+                    "corsRules": []
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/tableServices",
+            "apiVersion": "2024-01-01",
+            "name": "[concat(parameters('storageAccount'), '/default')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccount'))]"
+            ],
+            "properties": {
+                "cors": {
+                    "corsRules": []
+                }
+            }
+        }
+    ]
+}
